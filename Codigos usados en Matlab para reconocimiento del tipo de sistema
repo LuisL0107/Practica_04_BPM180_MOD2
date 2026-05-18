@@ -1,0 +1,185 @@
+%% CSV Guardado de datos obtenidos en archivo CSV
+clear; clc;
+
+%% DATOS BMP180
+% Vector de tiempo (0 a 39.8 segundos, cada 0.2s) - 200 muestras
+t_real = (0:0.2:39.8)';
+
+% Vector de temperaturas BMP180 - DEBE TENER 200 ELEMENTOS
+T_real = [
+22.8;22.8;22.8;22.8;22.8;22.8;22.9;22.9;22.9;22.9;...      % 10
+23.0;23.0;23.0;23.0;23.0;23.0;23.1;23.1;23.2;23.2;...      % 20
+23.3;23.3;23.4;23.5;23.5;23.6;23.7;23.8;23.9;24.0;...      % 30
+24.1;24.2;24.3;24.4;24.5;24.6;24.7;24.9;25.0;25.1;...      % 40
+25.3;25.4;25.6;25.7;25.9;26.1;26.2;26.4;26.6;26.8;...      % 50
+27.0;27.2;27.4;27.6;27.8;28.0;28.2;28.4;28.6;28.8;...      % 60
+29.0;29.2;29.4;29.6;29.8;30.0;30.2;30.4;30.6;30.8;...      % 70
+31.0;31.2;31.4;31.6;31.8;32.0;32.2;32.4;32.6;32.8;...      % 80
+33.0;33.2;33.4;33.6;33.8;34.0;34.2;34.4;34.6;34.8;...      % 90
+35.0;35.2;35.4;35.6;35.8;36.0;36.2;36.4;36.6;36.8;...      % 100
+37.0;37.2;37.4;37.6;37.8;38.0;38.2;38.4;38.6;38.8;...      % 110
+39.0;39.2;39.4;39.6;39.8;40.0;40.2;40.4;40.6;40.8;...      % 120
+41.0;41.1;41.2;41.3;41.4;41.5;41.6;41.7;41.8;41.9;...      % 130
+42.0;42.1;42.2;42.3;42.4;42.5;42.6;42.7;42.8;42.9;...      % 140
+43.0;43.1;43.2;43.3;43.4;43.5;43.6;43.7;43.8;43.9;...      % 150
+44.0;44.1;44.1;44.2;44.2;44.3;44.3;44.4;44.4;44.5;...      % 160
+44.5;44.6;44.6;44.7;44.7;44.8;44.8;44.9;44.9;45.0;...      % 170
+45.0;45.0;45.0;45.0;45.0;44.9;44.9;44.8;44.8;44.7;...      % 180
+44.7;44.6;44.6;44.5;44.5;44.4;44.4;44.3;44.3;44.2;...      % 190
+44.2;44.1;44.1;44.0;43.9;43.8;43.7;43.6;43.5;43.5         % 200
+];
+
+% Verificar longitud
+fprintf('Longitud BMP180: %d muestras (deben ser 200)\n', length(T_real));
+if length(T_real) == 200
+    fprintf('✅ Longitud correcta\n');
+else
+    fprintf('❌ ERROR: Tiene %d elementos, deben ser 200\n', length(T_real));
+end
+
+% Crear tabla BMP180
+tabla_bmp180 = table(t_real, T_real, 'VariableNames', {'Tiempo_s', 'Temperatura_C'});
+
+% Guardar como CSV
+writetable(tabla_bmp180, 'datos_bmp180.csv');
+disp('Archivo datos_bmp180.csv creado correctamente');
+
+%% DATOS LM35 - MISMA LONGITUD (200 muestras)
+t_lm35 = (0:0.2:39.8)';  % 0 a 39.8 segundos, 200 muestras
+
+T_lm35 = [
+22.8;22.8;22.8;22.8;22.9;22.9;22.9;23.0;23.0;23.0;...      % 10
+23.1;23.1;23.2;23.2;23.3;23.4;23.5;23.6;23.7;23.8;...      % 20
+23.9;24.0;24.1;24.2;24.3;24.4;24.6;24.7;24.9;25.0;...      % 30
+25.2;25.3;25.5;25.7;25.9;26.1;26.3;26.5;26.7;26.9;...      % 40
+27.1;27.3;27.5;27.7;27.9;28.1;28.3;28.5;28.7;28.9;...      % 50
+29.1;29.3;29.5;29.7;29.9;30.1;30.3;30.5;30.7;30.9;...      % 60
+31.1;31.3;31.5;31.7;31.9;32.1;32.3;32.5;32.7;32.9;...      % 70
+33.1;33.3;33.5;33.7;33.9;34.1;34.3;34.5;34.7;34.9;...      % 80
+35.1;35.3;35.5;35.7;35.9;36.1;36.3;36.5;36.7;36.9;...      % 90
+37.1;37.3;37.5;37.7;37.9;38.1;38.3;38.5;38.7;38.9;...      % 100
+39.1;39.3;39.5;39.7;39.9;40.1;40.3;40.5;40.7;40.9;...      % 110
+41.1;41.3;41.5;41.7;41.9;42.1;42.3;42.5;42.7;42.9;...      % 120
+43.1;43.3;43.5;43.7;43.9;44.1;44.2;44.3;44.4;44.5;...      % 130
+44.6;44.7;44.8;44.9;45.0;45.1;45.2;45.3;45.4;45.5;...      % 140
+45.6;45.7;45.8;45.9;46.0;46.1;46.1;46.2;46.2;46.3;...      % 150
+46.3;46.4;46.4;46.5;46.5;46.4;46.5;46.5;46.4;46.5;...      % 160
+46.4;46.4;46.3;46.4;46.3;46.3;46.2;46.2;46.1;46.1;...      % 170
+46.0;46.0;45.9;45.9;45.8;45.8;45.7;45.7;45.6;45.6;...      % 180
+45.6;45.6;45.5;45.5;45.5;45.5;45.5;45.5;45.4;45.4;...      % 190
+45.3;45.3;45.4;45.4;45.3;45.3;45.2;45.2;45.2;45.1          % 200
+];
+
+% Verificar longitud
+fprintf('\nLongitud LM35: %d muestras (deben ser 200)\n', length(T_lm35));
+if length(T_lm35) == 200
+    fprintf('✅ Longitud correcta\n');
+else
+    fprintf('❌ ERROR: Tiene %d elementos, deben ser 200\n', length(T_lm35));
+end
+
+% Crear tabla LM35
+tabla_lm35 = table(t_lm35, T_lm35, 'VariableNames', {'Tiempo_s', 'Temperatura_C'});
+
+% Guardar como CSV
+writetable(tabla_lm35, 'datos_lm35.csv');
+disp('Archivo datos_lm35.csv creado correctamente');
+
+%% VERIFICACIÓN FINAL
+fprintf('\n========================================\n');
+fprintf('VERIFICACIÓN FINAL:\n');
+fprintf('========================================\n');
+fprintf('BMP180: %d muestras, tiempo [%.1f, %.1f] s\n', ...
+    length(T_real), min(t_real), max(t_real));
+fprintf('LM35:   %d muestras, tiempo [%.1f, %.1f] s\n', ...
+    length(T_lm35), min(t_lm35), max(t_lm35));
+
+if length(T_real) == length(T_lm35) && length(T_real) == 200
+    fprintf('✅ TODO CORRECTO: Ambos tienen 200 muestras\n');
+else
+    fprintf('❌ ERROR: Las longitudes no coinciden\n');
+end
+
+%% GRÁFICAS RÁPIDAS DESDE CSV
+clear; close all; clc;
+
+% Cargar datos
+data_bmp = readtable('datos_bmp180.csv');
+data_lm35 = readtable('datos_lm35.csv');
+
+% Gráfica BMP180
+figure;
+plot(data_bmp.Tiempo_s, data_bmp.Temperatura_C, 'b-', 'LineWidth', 1.5);
+xlabel('Tiempo (s)'); ylabel('Temperatura (°C)');
+title('BMP180 - Calor con las manos'); grid on;
+saveas(gcf, 'BMP180.png');
+
+% Gráfica LM35
+figure;
+plot(data_lm35.Tiempo_s, data_lm35.Temperatura_C, 'r-', 'LineWidth', 1.5);
+xlabel('Tiempo (s)'); ylabel('Temperatura (°C)');
+title('LM35 - Calor con las manos'); grid on;
+saveas(gcf, 'LM35.png');
+
+% Comparación
+figure;
+plot(data_bmp.Tiempo_s, data_bmp.Temperatura_C, 'b-', 'LineWidth', 1.5); hold on;
+plot(data_lm35.Tiempo_s, data_lm35.Temperatura_C, 'r-', 'LineWidth', 1.5);
+xlabel('Tiempo (s)'); ylabel('Temperatura (°C)');
+title('Comparación BMP180 vs LM35');
+legend('BMP180', 'LM35', 'Location', 'southeast'); grid on;
+saveas(gcf, 'Comparacion.png');
+
+fprintf('✅ Gráficas guardadas\n');
+
+
+
+%% CARGAR DATOS DESDE CSV
+clear; close all; clc;
+
+% Cargar datos
+data_bmp = readtable('datos_bmp180.csv');
+data_lm35 = readtable('datos_lm35.csv');
+
+% Extraer vectores
+t_bmp = data_bmp.Tiempo_s;
+T_bmp = data_bmp.Temperatura_C;
+t_lm35 = data_lm35.Tiempo_s;
+T_lm35 = data_lm35.Temperatura_C;
+
+% Crear señal de entrada (calor de manos)
+% 1 = calor aplicado, 0 = sin calor
+u_bmp = ones(size(t_bmp));
+u_lm35 = ones(size(t_lm35));
+
+% Detectar cuándo se retiran las manos (pico máximo)
+[~, idx_pico_bmp] = max(T_bmp);
+[~, idx_pico_lm35] = max(T_lm35);
+
+u_bmp(idx_pico_bmp:end) = 0;
+u_lm35(idx_pico_lm35:end) = 0;
+
+fprintf('Datos cargados correctamente\n');
+fprintf('BMP180: pico en t = %.1f s\n', t_bmp(idx_pico_bmp));
+fprintf('LM35: pico en t = %.1f s\n', t_lm35(idx_pico_lm35));
+
+%% CREAR OBJETOS PARA SYSTEM IDENTIFICATION
+Ts = 0.2;  % Tiempo de muestreo (segundos)
+
+% Objeto para BMP180
+data_bmp_id = iddata(T_bmp, u_bmp, Ts);
+data_bmp_id.InputName = 'Calor_Manos';
+data_bmp_id.OutputName = 'Temperatura';
+data_bmp_id.InputUnit = 'binario';
+data_bmp_id.OutputUnit = '°C';
+
+% Objeto para LM35
+data_lm35_id = iddata(T_lm35, u_lm35, Ts);
+data_lm35_id.InputName = 'Calor_Manos';
+data_lm35_id.OutputName = 'Temperatura';
+data_lm35_id.InputUnit = 'binario';
+data_lm35_id.OutputUnit = '°C';
+
+% Guardar objetos
+save('datos_identificacion.mat', 'data_bmp_id', 'data_lm35_id', 't_bmp', 'T_bmp', 't_lm35', 'T_lm35', 'u_bmp', 'u_lm35');
+fprintf('Objetos iddata guardados en datos_identificacion.mat\n');
