@@ -1,0 +1,153 @@
+#include <Wire.h>
+#include <Adafruit_BMP085.h>
+
+Adafruit_BMP085 bmp;
+
+const float TB           = 10.0;
+const long  INTERVALO_MS = 5000;
+const long  DURACION_DIA = 30000UL;
+
+const int   NUM_ETAPAS = 6;
+const float UC_ETAPA[NUM_ETAPAS] PROGMEM = { 12.89, 64.41, 91.33, 99.31, 112.77, 153.24 };
+
+// Nombres en Flash para no gastar RAM
+const char e0[] PROGMEM = "Emergencia";
+const char e1[] PROGMEM = "Formacion de guias";
+const char e2[] PROGMEM = "Floracion";
+const char e3[] PROGMEM = "Formacion de vaina";
+const char e4[] PROGMEM = "Llenado de vainas";
+const char e5[] PROGMEM = "Maduracion";
+const char* const NOMBRE_ETAPA[NUM_ETAPAS] PROGMEM = { e0, e1, e2, e3, e4, e5 };
+
+float ucAcumuladas = 0.0;
+float tempMax      = -999;
+float tempMin      =  999;
+float tempActual   = 0.0;
+int   diaActual    = 1;
+int   lecturasDia  = 0;
+int   etapaActual  = -1;
+
+unsigned long ultimaLectura = 0;
+unsigned long inicioDia     = 0;
+
+// Lee nombre de etapa desde Flash a un buffer temporal
+void getNombre(int i, char* buf) {
+  strcpy_P(buf, (char*)pgm_read_word(&NOMBRE_ETAPA[i]));
+}
+
+// Lee UC de etapa desde Flash
+float getUC(int i) {
+  return pgm_read_float(&UC_ETAPA[i]);
+}
+
+int obtenerEtapa(float uc) {
+  int e = -1;
+  for (int i = 0; i < NUM_ETAPAS; i++) if (uc >= getUC(i)) e = i;
+  return e;
+}
+
+void imprimirBarra(float ucAcum, int etapa) {
+  float ucInicio = (etapa >= 0) ? getUC(etapa) : 0.0;
+  float ucFin    = (etapa < NUM_ETAPAS - 1) ? getUC(etapa + 1) : getUC(NUM_ETAPAS - 1);
+  float pct = constrain((ucAcum - ucInicio) / (ucFin - ucInicio) * 100.0, 0, 100);
+  int barras = (int)(pct / 10.0);
+  Serial.print(F("  ["));
+  for (int i = 0; i < 10; i++) Serial.print(i < barras ? '#' : '-');
+  Serial.print(F("] "));
+  Serial.print(pct, 1);
+  Serial.println(F(" %"));
+}
+
+void mostrarLecturaRealTime() {
+  int seg = constrain((int)map((int)tempActual, 0, 45, 0, 20), 0, 20);
+  Serial.print(F("Temp: "));
+  Serial.print(tempActual, 1);
+  Serial.print(F(" C |"));
+  for (int i = 0; i < 20; i++) Serial.print(i < seg ? '=' : ' ');
+  Serial.print('|');
+  if      (tempActual >= 28) Serial.print(F(" [CALIENTE]"));
+  else if (tempActual >= 18) Serial.print(F(" [OPTIMA]  "));
+  else if (tempActual >= TB) Serial.print(F(" [FRESCA]  "));
+  else                       Serial.print(F(" [<TB]     "));
+  Serial.print(F("  Max:")); Serial.print(tempMax == -999 ? 0 : tempMax, 1);
+  Serial.print(F("  Min:")); Serial.println(tempMin ==  999 ? 0 : tempMin, 1);
+}
+
+void cerrarDia() {
+  if (lecturasDia == 0) { inicioDia = millis(); return; }
+
+  float ucDia = max(0.0, ((tempMax + tempMin) / 2.0) - TB);
+  ucAcumuladas += ucDia;
+  int nuevaEtapa = obtenerEtapa(ucAcumuladas);
+  char buf[22];
+
+  Serial.println();
+  Serial.print(F("=== RESUMEN DIA ")); Serial.print(diaActual); Serial.println(F(" ==="));
+  Serial.print(F("Temp max:  ")); Serial.print(tempMax, 2); Serial.println(F(" C"));
+  Serial.print(F("Temp min:  ")); Serial.print(tempMin, 2); Serial.println(F(" C"));
+  Serial.print(F("UC dia:    ")); Serial.print(ucDia, 4);   Serial.println(F(" UC"));
+  Serial.print(F("UC total:  ")); Serial.print(ucAcumuladas, 4); Serial.println(F(" UC"));
+  Serial.println();
+
+  for (int i = 0; i < NUM_ETAPAS; i++) {
+    getNombre(i, buf);
+    if      (i < nuevaEtapa)  Serial.print(F("[OK] "));
+    else if (i == nuevaEtapa) Serial.print(F("[>>] "));
+    else                      Serial.print(F("[  ] "));
+    Serial.print(buf);
+    Serial.print(F(" (")); Serial.print(getUC(i)); Serial.println(F(" UC)"));
+  }
+  Serial.println();
+
+  if (nuevaEtapa == -1) {
+    Serial.print(F("Faltan ")); Serial.print(getUC(0) - ucAcumuladas, 2); Serial.println(F(" UC para Emergencia"));
+  } else {
+    if (nuevaEtapa != etapaActual) Serial.println(F("*** NUEVA ETAPA ***"));
+    getNombre(nuevaEtapa, buf);
+    Serial.print(F("ETAPA: >> ")); Serial.print(buf); Serial.println(F(" <<"));
+    imprimirBarra(ucAcumuladas, nuevaEtapa);
+    if (nuevaEtapa < NUM_ETAPAS - 1) {
+      getNombre(nuevaEtapa + 1, buf);
+      Serial.print(F("Proxima: ")); Serial.println(buf);
+      Serial.print(F("Faltan:  ")); Serial.print(getUC(nuevaEtapa + 1) - ucAcumuladas, 2); Serial.println(F(" UC"));
+    } else {
+      Serial.println(F("*** MADURACION FINAL ***"));
+    }
+  }
+  Serial.println(F("------------------------------\n"));
+
+  etapaActual = nuevaEtapa;
+  tempMax = -999; tempMin = 999;
+  lecturasDia = 0;
+  diaActual++;
+  inicioDia = millis();
+}
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println(F("=== FENOLOGIA FRIJOL ROJO DE SEDA ==="));
+  if (!bmp.begin()) {
+    Serial.println(F("ERROR: BMP180 no encontrado."));
+    while (1);
+  }
+  Serial.println(F("BMP180 listo. Iniciando...\n"));
+  inicioDia     = millis();
+  ultimaLectura = millis();
+}
+
+void loop() {
+  unsigned long ahora = millis();
+
+  if (ahora - ultimaLectura >= (unsigned long)INTERVALO_MS) {
+    ultimaLectura = ahora;
+    tempActual = bmp.readTemperature();
+    lecturasDia++;
+    if (tempActual > tempMax) tempMax = tempActual;
+    if (tempActual < tempMin) tempMin = tempActual;
+    mostrarLecturaRealTime();
+  }
+
+  if (ahora - inicioDia >= (unsigned long)DURACION_DIA) {
+    cerrarDia();
+  }
+}
