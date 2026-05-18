@@ -1,0 +1,82 @@
+#include <Wire.h>
+#include <Adafruit_BMP085.h>
+
+Adafruit_BMP085 bmp;
+
+// ─── Constantes físicas ───────────────────────────────────────────
+const float R_ESPECIFICO = 287.058; // J/(kg·K)  — constante específica del aire seco
+const float RADIO_COLUMNA = 1.0;    // metros
+const float ALTURA_COLUMNA = 1.0;   // metros (columna de 1 m de alto por defecto)
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("===========================================");
+  Serial.println("   Sensor BMP180 - Densidad del Aire");
+  Serial.println("===========================================\n");
+
+  if (!bmp.begin()) {
+    Serial.println("ERROR: No se encontró el BMP180.");
+    Serial.println("Verifica la conexión SDA/SCL y el voltaje.");
+    while (1); // Detiene el programa
+  }
+
+  Serial.println("BMP180 inicializado correctamente.\n");
+}
+
+void loop() {
+  // ─── Lecturas del sensor ────────────────────────────────────────
+  float temperatura_C  = bmp.readTemperature();           // °C
+  float presion_Pa     = bmp.readPressure();              // Pascales
+  float altitud_m      = bmp.readAltitude();              // metros (nivel del mar estándar)
+
+  // ─── Conversiones ───────────────────────────────────────────────
+  float temperatura_K  = temperatura_C + 273.15;          // Kelvin (necesario para la fórmula)
+  float presion_hPa    = presion_Pa / 100.0;              // hPa / mbar (más fácil de leer)
+
+  // ─── Cálculo de densidad del aire ───────────────────────────────
+  // Ley del gas ideal:  ρ = P / (R_esp * T)
+  float densidad = presion_Pa / (R_ESPECIFICO * temperatura_K); // kg/m³
+
+  // ─── Cálculo de masa de la columna de aire circular ─────────────
+  // Volumen cilindro: V = π * r² * h
+  // Masa:             m = ρ * V
+  float volumen_columna = PI * RADIO_COLUMNA * RADIO_COLUMNA * ALTURA_COLUMNA; // m³
+  float masa_columna    = densidad * volumen_columna;                           // kg
+
+  // ─── Mostrar resultados en el Monitor Serial ────────────────────
+  Serial.println("-------------------------------------------");
+  Serial.print("Temperatura:          ");
+  Serial.print(temperatura_C, 2);
+  Serial.println(" °C");
+
+  Serial.print("Presión barométrica:  ");
+  Serial.print(presion_hPa, 2);
+  Serial.println(" hPa");
+
+  Serial.print("Altitud estimada:     ");
+  Serial.print(altitud_m, 2);
+  Serial.println(" m (sobre nivel del mar)");
+
+  Serial.println();
+  Serial.print("Densidad del aire:    ");
+  Serial.print(densidad, 4);
+  Serial.println(" kg/m³");
+
+  Serial.println();
+  Serial.println("── Columna de aire circular ───────────────");
+  Serial.print("   Radio:             ");
+  Serial.print(RADIO_COLUMNA, 1);
+  Serial.println(" m");
+  Serial.print("   Altura:            ");
+  Serial.print(ALTURA_COLUMNA, 1);
+  Serial.println(" m");
+  Serial.print("   Volumen:           ");
+  Serial.print(volumen_columna, 4);
+  Serial.println(" m³");
+  Serial.print("   Masa de la columna:");
+  Serial.print(masa_columna, 4);
+  Serial.println(" kg");
+  Serial.println("-------------------------------------------\n");
+
+  delay(2000); // Lectura cada 2 segundos
+}
