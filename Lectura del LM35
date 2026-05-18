@@ -1,0 +1,23 @@
+// Sensor LM35 conectado al pin A0
+int pinLM35 = A0;
+
+void setup() {
+  Serial.begin(9600);
+  Serial.println("Lectura de temperatura con LM35");
+}
+
+void loop() {
+  int lectura = analogRead(pinLM35);
+
+  // Convertir lectura ADC a voltaje
+  float voltaje = lectura * (5.0 / 1023.0);
+
+  // LM35 entrega 10 mV por cada °C
+  float temperatura = voltaje * 100.0;
+
+  Serial.print("Temperatura: ");
+  Serial.print(temperatura);
+  Serial.println(" °C");
+
+  delay(1000);
+}
